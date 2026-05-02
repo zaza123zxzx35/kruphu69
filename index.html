@@ -3096,84 +3096,66 @@ function initLawCards() {
 
 // ===== STUDY BUDDY CHAT =====
 function initStudyChat() {
-  const el = document.getElementById('studychat-container');
+  var el = document.getElementById('studychat-container');
   if (!el) return;
 
-  const SYSTEM = 'คุณเป็น AI ติวเตอร์ผู้ช่วยสอน สำหรับครูที่กำลังเตรียมสอบครูผู้ช่วย สพฐ. กรณีพิเศษ 2569 วิชาเอกภาษาอังกฤษ ตอบเป็นภาษาไทย กระชับ เข้าใจง่าย มีตัวอย่าง ใช้ emoji ประกอบ';
-  const QUICK = ['อธิบาย ZPD','Bloom Taxonomy คืออะไร','กฎหมายครู ข้อสำคัญ','ช่วยดู Grammar','CLT vs PPP','ข้อสอบออกอะไรบ้าง','เทคนิคทำข้อสอบ'];
-  let messages = [];
-  let loading = false;
+  var SYSTEM_CONTEXT = 'คุณเป็น AI ติวเตอร์ สำหรับครูที่เตรียมสอบครูผู้ช่วย สพฐ. กรณีพิเศษ 2569 วิชาเอกภาษาอังกฤษ ตอบเป็นภาษาไทย กระชับ เข้าใจง่าย';
 
-  function render() {
-    const isFile = window.location.protocol === 'file:';
-    el.innerHTML = `
-      ${isFile ? `<div style="background:rgba(255,215,0,0.07);border:1.5px solid rgba(255,215,0,0.3);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:0.82em;font-family:'Kanit',sans-serif;">
-        ⚠️ Chat ต้องการ https:// — เปิดไฟล์จาก browser โดยตรงทำให้ API ถูก block (CORS)<br>
-        <a href="https://claude.ai" target="_blank" style="color:#FFD700;font-weight:800;">🔗 ใช้ claude.ai แทนได้เลย</a> &nbsp;|&nbsp; หรืออัปโหลดไฟล์นี้ไปที่ web server
-      </div>` : ''}
-      <div class="chat-quick">
-        ${QUICK.map(q=>`<button class="chat-quick-btn" onclick="chatSend('${q}')">${q}</button>`).join('')}
-      </div>
-      <div class="chat-messages" id="chat-msgs">
-        ${messages.length===0?`<div style="text-align:center;padding:20px;color:var(--subtext);font-size:0.85em;font-family:'Kanit',sans-serif;">💬 ถามอะไรก็ได้เกี่ยวกับการสอบครูผู้ช่วย</div>`:''}
-        ${messages.map(m=>`
-          <div class="chat-msg ${m.role}">
-            <div class="chat-avatar">${m.role==='ai'?'🤖':'👤'}</div>
-            <div class="chat-bubble">${m.text.split('\n').join('<br>')}</div>
-          </div>`).join('')}
-        ${loading?`<div class="chat-msg ai"><div class="chat-avatar">🤖</div><div class="chat-bubble" style="color:var(--subtext);">⏳ กำลังคิด...</div></div>`:''}
-      </div>
-      <div class="chat-input-row">
-        <input class="chat-input" id="chat-inp" placeholder="ถามอะไรก็ได้..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();chatSend();}"/>
-        <button onclick="chatSend()" class="today-btn" style="border-color:var(--accent);color:var(--accent);padding:9px 16px;" ${loading?'disabled':''}>ส่ง</button>
-        ${messages.length>0?`<button onclick="chatClear()" class="today-btn danger" style="font-size:0.72em;padding:9px 10px;">🗑</button>`:''}
-      </div>
-    `;
-    // auto scroll
-    setTimeout(()=>{ const cm=document.getElementById('chat-msgs'); if(cm) cm.scrollTop=cm.scrollHeight; },50);
+  var QUICK = [
+    {label:'อธิบาย ZPD', q:'อธิบาย Zone of Proximal Development (ZPD) ของ Vygotsky สำหรับสอบครูผู้ช่วย'},
+    {label:'Bloom Taxonomy', q:'อธิบาย Bloom Taxonomy ทั้ง 6 ระดับ พร้อมตัวอย่าง'},
+    {label:'กฎหมายครู', q:'สรุปกฎหมายการศึกษาที่ออกสอบครูผู้ช่วยบ่อยที่สุด'},
+    {label:'CLT vs PPP', q:'อธิบายความต่างระหว่าง CLT กับ PPP ในการสอนภาษาอังกฤษ'},
+    {label:'ข้อสอบออกอะไร', q:'ข้อสอบครูผู้ช่วย สพฐ. กรณีพิเศษ 69 วิชาเอกภาษาอังกฤษ ออกอะไรบ้าง'},
+    {label:'เทคนิคทำข้อสอบ', q:'เทคนิคทำข้อสอบครูผู้ช่วย สพฐ. ให้ได้คะแนนสูง'},
+    {label:'Grammar สำคัญ', q:'Grammar ภาษาอังกฤษที่ออกสอบครูผู้ช่วยบ่อยที่สุด พร้อมตัวอย่าง'},
+    {label:'พักผ่อนก่อนสอบ', q:'ควรเตรียมตัวอย่างไรในช่วง 3 วันก่อนสอบครูผู้ช่วย'},
+  ];
+
+  function buildURL(question) {
+    var fullQ = '[Context: ' + SYSTEM_CONTEXT + ']\n\n' + question;
+    return 'https://claude.ai/new?q=' + encodeURIComponent(fullQ);
   }
 
-  window.chatSend = async function(preset) {
+  function render() {
+    var html = '';
+    html += '<div class="info-box blue" style="margin-bottom:14px;line-height:1.6;">';
+    html += '💬 <strong>Study Buddy</strong> เปิด Claude แท็บใหม่พร้อม context ครูผู้ช่วยทันที<br>';
+    html += '<span style="font-size:0.82em;opacity:0.8;">กด Quick Question หรือพิมพ์คำถามเองแล้วกด "ถาม Claude"</span>';
+    html += '</div>';
+
+    html += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;">';
+    QUICK.forEach(function(q) {
+      html += '<a href="' + buildURL(q.q) + '" target="_blank" class="chat-quick-btn" style="text-decoration:none;">' + q.label + '</a>';
+    });
+    html += '</div>';
+
+    html += '<div class="chat-input-row" style="margin-bottom:12px;">';
+    html += '<input class="chat-input" id="chat-inp" placeholder="พิมพ์คำถามของตัวเอง..." style="flex:1;"/>';
+    html += '<button onclick="studyChatOpen()" class="today-btn" style="border-color:var(--accent);color:var(--accent);padding:9px 18px;white-space:nowrap;">ถาม Claude ↗</button>';
+    html += '</div>';
+
+    html += '<div style="background:rgba(0,207,255,0.04);border:1px solid rgba(0,207,255,0.15);border-radius:10px;padding:12px 16px;font-size:0.82em;color:var(--subtext);">';
+    html += '📌 จะเปิด claude.ai แท็บใหม่พร้อม context "ครูผู้ช่วย สพฐ. วิชาเอกภาษาอังกฤษ" ติดไปเลย ไม่ต้องพิมพ์ซ้ำ';
+    html += '</div>';
+
+    el.innerHTML = html;
+
     var inp = document.getElementById('chat-inp');
-    var text = (preset || (inp ? inp.value : '')).trim();
-    if (!text || loading) return;
-    if (inp) inp.value = '';
-    messages.push({role: 'user', text: text});
-    loading = true; render();
-
-    if (window.location.protocol === 'file:') {
-      loading = false;
-      messages.push({role: 'ai', text: 'เปิดจาก file:// กรุณาใช้ผ่าน GitHub Pages'});
-      render(); return;
-    }
-
-    try {
-      var res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-callout': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 600,
-          system: SYSTEM,
-          messages: messages.map(function(m) {
-            return {role: m.role === 'ai' ? 'assistant' : 'user', content: m.text};
-          })
-        })
+    if (inp) {
+      inp.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') studyChatOpen();
       });
-      var data = await res.json();
-      if (data.error) throw new Error(data.error.type + ': ' + data.error.message);
-      var reply = (data.content && data.content[0] && data.content[0].text) || 'ไม่ได้รับคำตอบ';
-      messages.push({role: 'ai', text: reply});
-    } catch(e) {
-      messages.push({role: 'ai', text: 'Error: ' + (e.message || String(e))});
     }
-    loading = false; render();
+  }
+
+  window.studyChatOpen = function() {
+    var inp = document.getElementById('chat-inp');
+    var text = inp ? inp.value.trim() : '';
+    if (!text) { if(inp) inp.focus(); return; }
+    window.open(buildURL(text), '_blank');
+    if (inp) inp.value = '';
   };
-  window.chatClear=function(){ messages=[]; render(); };
 
   render();
 }
