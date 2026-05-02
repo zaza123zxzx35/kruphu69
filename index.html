@@ -1770,34 +1770,37 @@ setInterval(updateCountdown, 1000);
   const CARRY_KEY = 'kruphu69_carry';
 
   function loadChecks() {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY) || '{}'); } catch(e) { return {}; }
+    // CORS: open Claude directly
+    window.open('https://claude.ai', '_blank');
   }
   function saveChecks(obj) {
-    try { localStorage.setItem(STORE_KEY, JSON.stringify(obj)); } catch(e) {}
+    // CORS: open Claude directly
+    window.open('https://claude.ai', '_blank');
   }
   function loadCarry() {
-    try { return JSON.parse(localStorage.getItem(CARRY_KEY) || 'null'); } catch(e) { return null; }
+    // CORS: open Claude directly
+    window.open('https://claude.ai', '_blank');
   }
   function saveCarry(arr, dayIdx) {
-    try { localStorage.setItem(CARRY_KEY, JSON.stringify({day: dayIdx, items: arr})); } catch(e) {}
+    // CORS: open Claude directly
+    window.open('https://claude.ai', '_blank');
   }
   function clearCarry() {
-    try { localStorage.removeItem(CARRY_KEY); } catch(e) {}
+    // CORS: open Claude directly
+    window.open('https://claude.ai', '_blank');
   }
 
   // ===== NOTE HELPERS =====
   const NOTE_KEY = 'kruphu69_notes';
   function loadNote(dayIdx) {
-    try { const n = JSON.parse(localStorage.getItem(NOTE_KEY)||'{}'); return n[dayIdx]||''; } catch(e){ return ''; }
+    // CORS: open Claude directly
+    window.open('https://claude.ai', '_blank');
   }
   window.loadNote = loadNote;
   let noteSaveTimer = null;
   window.saveNote = function(dayIdx, val) {
-    try {
-      const n = JSON.parse(localStorage.getItem(NOTE_KEY)||'{}');
-      n[dayIdx] = val;
-      localStorage.setItem(NOTE_KEY, JSON.stringify(n));
-    } catch(e){}
+    // CORS: open Claude directly
+    window.open('https://claude.ai', '_blank');
     clearTimeout(noteSaveTimer);
     noteSaveTimer = setTimeout(()=>{ const el=document.getElementById('note-saved-lbl'); if(el){el.classList.add('show'); setTimeout(()=>el.classList.remove('show'),1500);} }, 800);
   };
@@ -2313,28 +2316,14 @@ function initQuiz() {
 ]
 สร้าง 6 ข้อ ห้ามมี markdown ห้ามมีข้อความนอก JSON array`;
 
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-callout': 'true' },
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1000,
-          system: systemPrompt,
-          messages: [{ role:'user', content: userPrompt }],
-        })
-      });
-      const data = await res.json();
-      const raw = data.content?.[0]?.text || '[]';
-      // strip markdown fences if any
-      const clean = raw.replace('```json','').replace('```','').trim();
-      cards = JSON.parse(clean);
-      if (!Array.isArray(cards) || cards.length === 0) throw new Error('empty');
-      // cache
-      sessionHistory[subject.id + '_' + difficulty.id] = cards;
-    } catch(e) {
-      cards = [{ q:'เกิดข้อผิดพลาด กรุณาลองใหม่', a:'กด "🔄 Generate ใหม่" เพื่อโหลดคำถามอีกครั้ง', hint:'network error' }];
-    }
+    // Open Claude with quiz generation prompt
+    window.open('https://claude.ai/new?q=' + encodeURIComponent(userPrompt), '_blank');
+    cards = [{
+      q: subject.icon + ' เปิด Claude แล้วหรือยัง?',
+      a: 'Claude กำลังสร้าง 6 ข้อให้ในแท็บใหม่ครับ — copy คำตอบมาอ่านได้เลย',
+      hint: 'ดูแท็บ Claude ที่เพิ่งเปิด'
+    }];
+    sessionHistory[subject.id + '_' + difficulty.id] = cards;
     cardIdx = 0;
     isFlipped = false;
     score = { right:0, wrong:0 };
@@ -2624,22 +2613,18 @@ function initPomodoro() {
   }
   
   if (cached) { try { const d=JSON.parse(cached); injectMotiv(d.text,d.tip); return; } catch(e){} }
-  
-  fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-callout':'true'},
-    body:JSON.stringify({
-      model:'claude-sonnet-4-20250514', max_tokens:200,
-      messages:[{role:'user',content:'สร้างข้อความให้กำลังใจสั้นๆ (2 ประโยค) สำหรับครูที่กำลังเตรียมสอบครูผู้ช่วย สพฐ. วิชาเอกภาษาอังกฤษ และ tip ติวสั้น 1 ประโยค ตอบ JSON: {"text":"...","tip":"..."} เท่านั้น'}]
-    })
-  }).then(r=>r.json()).then(data=>{
-    const raw = data.content?.[0]?.text||'{}';
-    const d = JSON.parse(raw.replace('```json','').replace('```','').trim());
-    localStorage.setItem(motKey, JSON.stringify(d));
-    injectMotiv(d.text, d.tip);
-  }).catch(()=>{
-    injectMotiv('วันนี้ก้าวหน้าไปอีกหนึ่งวัน สู้ๆ ครับ! 🔥','ทบทวนกฎหมาย 1 ฉบับก่อนนอนทุกคืน');
-  });
+
+  var _motivs = [
+    {text:'ทุกวันที่ติวคือก้าวสู่ความสำเร็จ สู้ๆ นะครับ! 🔥', tip:'ทบทวนกฎหมาย 1 ฉบับก่อนนอนทุกคืน'},
+    {text:'ครูผู้ช่วยอยู่ใกล้แล้ว ตั้งใจวันนี้แล้วจะภูมิใจวันสอบ! 💪', tip:'Grammar: ทำ 5 ข้อทุกเช้า สะสมทีละนิด'},
+    {text:'ความพยายามไม่เคยทรยศ ยิ่งติวมากยิ่งมั่นใจมาก! ⚡', tip:'อ่าน Bloom Taxonomy ให้ขึ้นใจ ออกสอบทุกปี'},
+    {text:'ทุกหน้าที่อ่านคือคะแนนที่เพิ่มขึ้น! 🌟', tip:'ฝึก Passive Voice และ Reported Speech บ่อยๆ'},
+    {text:'เส้นทางสู่ครูผู้ช่วยอาจยาก แต่ทุกก้าวมีคุณค่า! 🎓', tip:'สรุปกฎหมาย 6 ฉบับลงกระดาษ 1 แผ่น'},
+    {text:'ความตั้งใจวันนี้คือผลลัพธ์ของพรุ่งนี้ ไม่ยอมแพ้! 🏆', tip:'จำ Multiple Intelligence ของ Gardner ทั้ง 8'},
+    {text:'สู้ๆ ทุกคนที่ผ่านสอบล้วนเคยเหนื่อยแบบนี้มาก่อน 🌅', tip:'ทำ Mock Test สัปดาห์ละครั้ง จับเวลาจริง'},
+  ];
+  var _dm = _motivs[new Date().getDay() % _motivs.length];
+  injectMotiv(_dm.text, _dm.tip);
 })();
 
 // ===== MOCK EXAM (AI-Powered) =====
@@ -2749,20 +2734,13 @@ function initMockExam() {
     state.section = SECTIONS.find(s=>s.id===id);
     state.phase = 'loading'; state.answers = {}; state.showAnswers = false;
     render();
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-callout':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:2000,
-          system:'ตอบ JSON array เท่านั้น ไม่มีข้อความอื่น ไม่มี markdown',
-          messages:[{role:'user',content:state.section.prompt}]})
-      });
-      const data = await res.json();
-      const raw = data.content?.[0]?.text||'[]';
-      state.questions = JSON.parse(raw.replace('```json','').replace('```','').trim());
-      if(!Array.isArray(state.questions)||!state.questions.length) throw new Error('empty');
-    } catch(e) {
-      state.questions = [{q:'เกิดข้อผิดพลาด กรุณาลองใหม่',choices:['ก) ลองใหม่','ข) -','ค) -','ง) -'],answer:0,explain:'network error'}];
-    }
+        try {
+      var claudePrompt = state.section.prompt;
+      window.open('https://claude.ai/new?q=' + encodeURIComponent(claudePrompt), '_blank');
+      state.questions = [
+        {q:'Claude เปิดในแท็บใหม่แล้วครับ — copy ข้อสอบมาทำได้เลย', choices:['ก) ดูแท็บ Claude','ข) -','ค) -','ง) -'], answer:0, explain:'กดปุ่ม "เลือกหมวดอื่น" แล้วลองใหม่'}
+      ];
+    } catch(e) { state.questions = [{q:'Error',choices:['ก) ลองใหม่','ข) -','ค) -','ง) -'],answer:0,explain:''}]; }
     state.phase = 'exam'; state.timeLeft = 15*60;
     stopTimer();
     state.timerInt = setInterval(()=>{
@@ -2839,16 +2817,11 @@ function initWeakPoints() {
     if(!div) return;
     div.innerHTML = '<div style="color:var(--subtext);font-size:0.85em;padding:10px;">⏳ AI กำลังวิเคราะห์...</div>';
     const summary = Object.entries(history.reduce((a,h)=>{a[h.subject]=(a[h.subject]||0)+1;return a;},{})).map(([k,v])=>`${k}: ${v} ข้อ`).join(', ');
-    try {
-      const res = await fetch('https://api.anthropic.com/v1/messages',{
-        method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-callout':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
-          messages:[{role:'user',content:`ผู้สอบครูผู้ช่วย สพฐ. วิชาเอกภาษาอังกฤษ มีจุดอ่อนดังนี้: ${summary} วิเคราะห์และให้คำแนะนำการทบทวน 3-4 ข้อ เป็นภาษาไทย กระชับ ใช้ได้จริง`}]})
-      });
-      const data = await res.json();
-      const text = data.content?.[0]?.text||'';
-      div.innerHTML = `<div style="background:rgba(255,215,0,0.05);border:1.5px solid rgba(255,215,0,0.2);border-radius:12px;padding:14px 16px;font-size:0.86em;line-height:1.7;color:var(--text);">${text.split('\n').join('<br>')}</div>`;
-    } catch(e){ div.innerHTML = '<div class="info-box red">เกิดข้อผิดพลาด กรุณาลองใหม่</div>'; }
+        try {
+      var wq = 'วิเคราะห์จุดอ่อนและแนะนำการทบทวน: ' + summary;
+      window.open('https://claude.ai/new?q=' + encodeURIComponent(wq), '_blank');
+      div.innerHTML = '<div style="background:rgba(255,215,0,0.05);border:1.5px solid rgba(255,215,0,0.2);border-radius:12px;padding:14px;font-size:0.86em;color:var(--text);">เปิด Claude ในแท็บใหม่แล้วครับ — Claude จะวิเคราะห์จุดอ่อนและให้คำแนะนำโดยละเอียด</div>';
+    } catch(e) { div.innerHTML = '<div class="info-box red">เกิดข้อผิดพลาด</div>'; }
   };
   window.weakClear = function(){ if(confirm('ล้างข้อมูลจุดอ่อนทั้งหมด?')){ localStorage.removeItem('kru69_quiz_wrong'); render(); } };
 
@@ -2929,20 +2902,18 @@ function initInterview() {
   window.interviewAsk = async function(topic) {
     loading = true; currentQ = ''; feedback = ''; render();
     var t = topic || TOPICS[Math.floor(Math.random() * TOPICS.length)];
-    try {
-      var res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-callout':'true'},
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 200,
-          messages: [{role: 'user', content: '\u0e2a\u0e23\u0e49\u0e32\u0e07\u0e04\u0e33\u0e16\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e20\u0e32\u0e29\u0e13\u0e4c 1 \u0e02\u0e49\u0e2d \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e04\u0e23\u0e39\u0e1c\u0e39\u0e49\u0e0a\u0e48\u0e27\u0e22 \u0e2a\u0e1e\u0e10. \u0e27\u0e34\u0e0a\u0e32\u0e40\u0e2d\u0e01\u0e20\u0e32\u0e29\u0e32\u0e2d\u0e31\u0e07\u0e01\u0e24\u0e29 \u0e2b\u0e31\u0e27\u0e02\u0e49\u0e2d: ' + t + ' \u0e04\u0e33\u0e16\u0e32\u0e21\u0e15\u0e49\u0e2d\u0e07\u0e40\u0e1b\u0e47\u0e19\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 \u0e15\u0e23\u0e07\u0e08\u0e23\u0e34\u0e07 \u0e27\u0e31\u0e14\u0e04\u0e27\u0e32\u0e21\u0e40\u0e2b\u0e21\u0e32\u0e30\u0e2a\u0e21 \u0e15\u0e2d\u0e1a\u0e41\u0e04\u0e48\u0e04\u0e33\u0e16\u0e32\u0e21\u0e40\u0e14\u0e35\u0e22\u0e27 \u0e44\u0e21\u0e48\u0e21\u0e35\u0e04\u0e33\u0e19\u0e33'}]
-        })
-      });
-      var data = await res.json();
-      currentQ = (data.content && data.content[0] && data.content[0].text) || '\u0e27\u0e34\u0e2a\u0e31\u0e22\u0e17\u0e31\u0e28\u0e19\u0e4c\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13\u0e43\u0e19\u0e01\u0e32\u0e23\u0e1e\u0e31\u0e12\u0e19\u0e32\u0e1c\u0e39\u0e49\u0e40\u0e23\u0e35\u0e22\u0e19\u0e04\u0e37\u0e2d\u0e2d\u0e30\u0e44\u0e23?';
-    } catch(e) {
-      currentQ = '\u0e04\u0e38\u0e13\u0e21\u0e35\u0e41\u0e19\u0e27\u0e17\u0e32\u0e07\u0e08\u0e31\u0e14\u0e01\u0e32\u0e23\u0e40\u0e23\u0e35\u0e22\u0e19\u0e01\u0e32\u0e23\u0e2a\u0e2d\u0e19\u0e20\u0e32\u0e29\u0e32\u0e2d\u0e31\u0e07\u0e01\u0e24\u0e29\u0e43\u0e2b\u0e49\u0e19\u0e48\u0e32\u0e2a\u0e19\u0e43\u0e08\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e44\u0e23?';
-    }
+        var _qBank = {
+      'วิสัยทัศน์': 'วิสัยทัศน์ของคุณในการพัฒนาผู้เรียนภาษาอังกฤษในโรงเรียนคืออะไร และจะนำไปสู่การปฏิบัติอย่างไร?',
+      'วิธีการสอน': 'คุณจะออกแบบการสอนภาษาอังกฤษ Communicative Language Teaching (CLT) อย่างไรให้เหมาะกับนักเรียนไทย?',
+      'บริหารชั้นเรียน': 'ถ้านักเรียนในชั้นไม่ตั้งใจเรียนภาษาอังกฤษเพราะรู้สึกว่ายาก คุณจะจัดการอย่างไร?',
+      'นวัตกรรม': 'คุณจะนำเทคโนโลยีและสื่อดิจิทัลมาใช้ในการสอนภาษาอังกฤษอย่างไรให้มีประสิทธิภาพ?',
+      'โรงเรียน': 'ถ้าได้รับการบรรจุ คุณจะทำความเข้าใจบริบทและมาตรฐานของโรงเรียนอย่างไรในช่วงแรก?',
+      'จริยธรรม': 'ยกตัวอย่างสถานการณ์ที่คุณต้องตัดสินใจด้านจริยธรรมในฐานะครู และคุณจะทำอย่างไร?',
+      'AI': 'คุณมองว่า AI จะเปลี่ยนแปลงการสอนภาษาอังกฤษอย่างไร และครูต้องปรับตัวอย่างไร?',
+      'สถานการณ์': 'นักเรียน ม.3 คนหนึ่งมีปัญหา Reading Comprehension มาก คุณจะช่วยเขาอย่างไร?',
+    };
+    var topicKey = Object.keys(_qBank).find(function(k){ return t.indexOf(k) >= 0; });
+    currentQ = topicKey ? _qBank[topicKey] : ('กรุณาอธิบายแนวทางของคุณในหัวข้อ: ' + t);
     loading = false; render();
   };
 
@@ -2952,18 +2923,11 @@ function initInterview() {
     var ans = document.getElementById('interview-answer') && document.getElementById('interview-answer').value.trim();
     if (!ans) { alert('\u0e01\u0e23\u0e38\u0e13\u0e32\u0e1e\u0e34\u0e21\u0e1e\u0e4c\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e01\u0e48\u0e2d\u0e19\u0e04\u0e23\u0e31\u0e1a'); return; }
     feedback = '\u23F3 AI \u0e01\u0e33\u0e25\u0e31\u0e07\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e04\u0e33\u0e15\u0e2d\u0e1a...'; render();
-    try {
-      var res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-callout':'true'},
-        body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514', max_tokens: 500,
-          messages: [{role: 'user', content: '\u0e04\u0e33\u0e16\u0e32\u0e21\u0e2a\u0e31\u0e21\u0e20\u0e32\u0e29\u0e13\u0e4c\u0e04\u0e23\u0e39\u0e1c\u0e39\u0e49\u0e0a\u0e48\u0e27\u0e22: "' + currentQ + '"\n\n\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e02\u0e2d\u0e07\u0e1c\u0e39\u0e49\u0e2a\u0e21\u0e31\u0e04\u0e23: "' + ans + '"\n\n\u0e43\u0e2b\u0e49 feedback \u0e40\u0e1b\u0e47\u0e19\u0e20\u0e32\u0e29\u0e32\u0e44\u0e17\u0e22 \u0e1b\u0e23\u0e30\u0e40\u0e21\u0e34\u0e19\u0e43\u0e19 3 \u0e14\u0e49\u0e32\u0e19: 1) \u0e08\u0e38\u0e14\u0e41\u0e02\u0e47\u0e07 2) \u0e08\u0e38\u0e14\u0e17\u0e35\u0e48\u0e04\u0e27\u0e23\u0e1b\u0e23\u0e31\u0e1a 3) \u0e15\u0e31\u0e27\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e04\u0e33\u0e15\u0e2d\u0e1a\u0e17\u0e35\u0e48\u0e14\u0e35\u0e01\u0e27\u0e48\u0e32 \u0e01\u0e23\u0e30\u0e0a\u0e31\u0e1a \u0e43\u0e0a\u0e49\u0e44\u0e14\u0e49\u0e08\u0e23\u0e34\u0e07'}]
-        })
-      });
-      var data = await res.json();
-      feedback = (data.content && data.content[0] && data.content[0].text) || '\u0e44\u0e21\u0e48\u0e2a\u0e32\u0e21\u0e32\u0e23\u0e16\u0e27\u0e34\u0e40\u0e04\u0e23\u0e32\u0e30\u0e2b\u0e4c\u0e44\u0e14\u0e49';
-    } catch(e) { feedback = '\u0e40\u0e01\u0e34\u0e14\u0e02\u0e49\u0e2d\u0e1c\u0e34\u0e14\u0e1e\u0e25\u0e32\u0e14 \u0e01\u0e23\u0e38\u0e13\u0e32\u0e25\u0e2d\u0e07\u0e43\u0e2b\u0e21\u0e48'; }
+        try {
+      var fq = 'คำถามสัมภาษณ์: "' + currentQ + '"\nคำตอบ: "' + ans + '"\n\nให้ feedback 3 ด้าน: จุดแข็ง / จุดปรับ / ตัวอย่างคำตอบที่ดีกว่า';
+      window.open('https://claude.ai/new?q=' + encodeURIComponent(fq), '_blank');
+      feedback = '✅ เปิด Claude แท็บใหม่แล้วครับ — Claude จะให้ feedback ละเอียดในแท็บนั้น';
+    } catch(e) { feedback = 'เกิดข้อผิดพลาด'; }
     render();
   };
 
@@ -3084,13 +3048,11 @@ function initLawCards() {
     if(!div) return;
     const law=LAWS[i];
     div.innerHTML='<div style="color:var(--subtext);font-size:0.82em;">⏳ AI กำลังอธิบาย...</div>';
-    try {
-      const res=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-callout':'true'},
-        body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:400,
-          messages:[{role:'user',content:`อธิบาย ${law.title} สำหรับผู้เตรียมสอบครูผู้ช่วย สพฐ. เน้นมาตราสำคัญ สิ่งที่ออกสอบบ่อย และจุดที่มักสับสน ภาษาไทย กระชับ ใช้ bullets`}]})});
-      const data=await res.json();
-      div.innerHTML=`<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;font-size:0.83em;line-height:1.7;border:1px solid rgba(255,255,255,0.07);">${(data.content?.[0]?.text||'').split('\n').join('<br>')}</div>`;
-    } catch(e){ div.innerHTML='<div class="info-box red">เกิดข้อผิดพลาด</div>'; }
+        try {
+      var lq = 'อธิบาย ' + law.title + ' สำหรับสอบครูผู้ช่วย สพฐ. เน้นมาตราสำคัญ จุดที่ออกสอบบ่อย จุดที่มักสับสน ภาษาไทย ใช้ bullets';
+      window.open('https://claude.ai/new?q=' + encodeURIComponent(lq), '_blank');
+      div.innerHTML = '<div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:10px 14px;font-size:0.83em;border:1px solid rgba(255,255,255,0.07);">เปิด Claude แท็บใหม่แล้วครับ — Claude จะอธิบาย ' + law.title + ' ให้ละเอียด</div>';
+    } catch(e) { div.innerHTML = '<div class="info-box red">เกิดข้อผิดพลาด</div>'; }
   };
 }
 
